@@ -527,24 +527,38 @@ local InfectTab = Window:CreateTab("Infect", 4483362458)
 
 InfectTab:CreateSection("Target Selection")
 
+local playerNames = GetPlayerNames()
+if #playerNames == 0 then playerNames = {"No players found"} end
+
 InfectTab:CreateDropdown({
     Name = "Select Victim",
-    Options = GetPlayerNames(),
-    CurrentOption = {""},
+    Options = playerNames,
+    CurrentOption = {playerNames[1]},
     Flag = "VictimDropdown",
     Callback = function(val)
-        SelectedVictim = val[1]
-        Notify("Target", "Selected: " .. tostring(SelectedVictim), 2)
+        local ok, err = pcall(function()
+            if val and val[1] and val[1] ~= "No players found" then
+                SelectedVictim = val[1]
+                Notify("Target", "Selected: " .. tostring(SelectedVictim), 2)
+            else
+                Notify("Error", "Invalid selection. Refresh list.", 3)
+            end
+        end)
+        if not ok then
+            Notify("Error", "Dropdown error: " .. tostring(err), 3)
+        end
     end,
 })
 
 InfectTab:CreateButton({
     Name = "Refresh Player List",
     Callback = function()
-        -- Re-open dropdown isn't natively supported, so we notify with current list
-        local names = GetPlayerNames()
-        local list = table.concat(names, ", ")
-        Notify("Players Online", list ~= "" and list or "No other players found", 4)
+        local ok, err = pcall(function()
+            local names = GetPlayerNames()
+            local list = table.concat(names, ", ")
+            Notify("Players Online", list ~= "" and list or "No other players found", 4)
+        end)
+        if not ok then Notify("Error", tostring(err), 3) end
     end,
 })
 
